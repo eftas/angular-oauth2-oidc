@@ -1,5 +1,5 @@
 import { Injectable, Optional } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams, HttpParameterCodec } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
@@ -10,6 +10,24 @@ import { OAuthEvent, OAuthInfoEvent, OAuthErrorEvent, OAuthSuccessEvent } from '
 import { OAuthStorage, LoginOptions, ParsedIdToken, OidcDiscoveryDoc, TokenResponse, UserInfo } from './types';
 import { b64DecodeUnicode } from './base64-helper';
 import { AuthConfig } from './auth.config';
+
+class CustomEncoder implements HttpParameterCodec {
+    encodeKey(key: string): string {
+        return encodeURIComponent(key);
+    }
+
+    encodeValue(value: string): string {
+        return encodeURIComponent(value);
+    }
+
+    decodeKey(key: string): string {
+        return decodeURIComponent(key);
+    }
+
+    decodeValue(value: string): string {
+        return decodeURIComponent(value);
+    }
+}
 
 /**
  * Service for logging in and logging out with
@@ -554,7 +572,7 @@ export class OAuthService
         }
 
         return new Promise((resolve, reject) => {
-            let params = new HttpParams()
+            let params = new HttpParams({encoder: new CustomEncoder()})
                 .set('grant_type', 'password')
                 .set('client_id', this.clientId)
                 .set('scope', this.scope)
